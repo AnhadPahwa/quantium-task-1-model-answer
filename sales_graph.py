@@ -1,42 +1,29 @@
 from dash import Dash, dcc, html
 import pandas as pd
-import plotly.express as px
+from plotly.express import line
 
 app = Dash()
 
-colors = {
-    'background': '#111111',
-    'text': '#7FDBFF'
-}
-
 df = pd.read_csv('data/daily_sales_data_pink.csv')
+df = df.groupby('date')['sales'].sum().reset_index()
+df.columns = ['date', 'total_sales']
+df= df.rename(columns={'total_sales':'sales'})
 
-fig = px.bar(df, x='date', y='sales', color='region', barmode='group')
+line_chart = line(df, x='date', y='sales', title="Pink Morsel Sales", labels={'date': "Date", 'sales': "Sales"})
 
-fig.update_layout(
-    plot_bgcolor = colors['background'],
-    font_color = colors['text'],
-    paper_bgcolor = colors['background']
+visualisation = dcc.Graph(
+    id="sales-graph",
+    figure=line_chart
 )
 
-app.layout = html.Div(style = {'backgroundColor' : colors['background']}, children = [
-    html.H1(
-        children = "Pink Morsel Sales Data",
-        style = {
-            'textAlign' : 'center',
-            'color': colors['text']
-        }
-    ),
+header = html.H1("Pink Morsel Visualiser", id="header")
 
-    html.H1(children='Pink Morsel Sales Data by Date, filtered by region.', style={
-        'textAlign': 'center',
-        'color': colors['text']
-    }),
+app.layout = html.Div(
+    [
+        header,
+        visualisation
+    ]
+)
 
-    dcc.Graph(
-        id='sales-graph',
-        figure=fig
-    )
-])
-
-app.run(debug=True)
+if __name__ == "__main__":
+    app.run(debug=True)
